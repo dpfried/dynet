@@ -1249,6 +1249,9 @@ cdef class ParameterCollection: # {{{
     cpdef parameter_count(self):
       return self.thisptr.parameter_count()
 
+    cpdef reset_gradient(self):
+      return self.thisptr.reset_gradient()
+
 # Alias Model and ParameterCollection
 Model=ParameterCollection
 

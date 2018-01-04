@@ -114,6 +114,7 @@ cdef extern from "dynet/model.h" namespace "dynet":
         CModel add_subcollection(string name) except +
         string get_fullname()
         size_t parameter_count() except +
+        void reset_gradient()
 
 cdef extern from "dynet/io.h" namespace "dynet":
     cdef cppclass CTextFileSaver "dynet::TextFileSaver":
