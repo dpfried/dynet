@@ -154,6 +154,8 @@ void TextFileLoader::populate(ParameterCollection & model, const std::string & k
   std::string key_ = key;
   if (key_.size() != 0 && key_.back() != '/') key_ += "/";
   while(std::getline(datastream, line)) {
+    if (std::all_of(line.begin(),line.end(),isspace))
+        break;
     read_param_header(line, type, name, dim, byte_count, zero_grad);
     // Skip ones that don't match
     if(key.size() != 0 && name.substr(0, key_.size()) != key_) {
@@ -175,7 +177,7 @@ void TextFileLoader::populate(ParameterCollection & model, const std::string & k
     } else if(type == "#LookupParameter#") {
       values.resize(dim.size());
       if(lookup_id >= storage.lookup_params.size())
-        DYNET_RUNTIME_ERR("Too many lookup parameters in populated model at " << name);
+        DYNET_RUNTIME_ERR("Too many lookup parameters (" << lookup_id << ") in populated model at " << name << " with storage.lookup_params.size() = " << storage.lookup_params.size());
       LookupParameterStorage & param = *storage.lookup_params[lookup_id++];
       if(param.all_dim != dim)
         DYNET_RUNTIME_ERR("Dimensions of lookup parameter " << name << " lookup up from file (" << dim << 
