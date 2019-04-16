@@ -2108,7 +2108,111 @@ void SumBatches::backward_dev_impl(const MyDevice & dev,
     dEdxi.batch_matrix(i) += *dEdf;
 #endif
 }
+
 DYNET_NODE_INST_DEV_IMPL(SumBatches)
+
+// ************* CumulativeSum *************
+
+#ifndef __CUDACC__
+
+string CumulativeSum::as_string(const vector<string>& arg_names) const {
+  ostringstream s;
+  s << "cumsum(expression=" << arg_names[0] << ',' << d << ',' << exclusive << ')';
+  return s.str();
+}
+
+Dim CumulativeSum::dim_forward(const vector<Dim>& xs) const {
+  DYNET_ASSERT(xs.size() == 1, "Failed input count check in CumulativeSum");
+  DYNET_ARG_CHECK(xs[0].nd <= 3, "CumulativeSum implemented up to tensors of order 3 for now")
+  DYNET_ARG_CHECK(d <= xs[0].nd, "dimension " << d << " is out of bounds of tensor of order " << xs[0].nd << " in CumulativeSum" )
+  Dim ret(xs[0]);
+  return ret;
+}
+
+size_t CumulativeSum::aux_storage_size() const {
+  return dim.size() * sizeof(float);
+}
+
+#endif
+
+template<class MyDevice>
+void CumulativeSum::forward_dev_impl(const MyDevice & dev, const vector<const Tensor*>& xs, Tensor& fx) const {
+  DYNET_ASSERT(xs.size() == 1, "Failed input count check in CumulativeSum");
+  fx.tb<3>().device(*dev.edevice) = xs[0]->tb<3>().cumsum(d, exclusive);
+}
+
+template<class MyDevice>
+void CumulativeSum::backward_dev_impl(const MyDevice & dev,
+                             const vector<const Tensor*>& xs,
+                             const Tensor& fx,
+                             const Tensor& dEdf,
+                             unsigned i,
+                             Tensor& dEdxi) const {
+  DYNET_ARG_CHECK(i == 0, "Failed dimension check in CumulativeSum::backward");
+  Eigen::array<bool, 4> reverse_dim = {false, false, false, false};
+  reverse_dim[d] = true;
+  // First reverse the gradient
+  Tensor dEdf_reversed(dim, (float*)aux_mem, fx.device, DeviceMempool::FXS);
+  dEdf_reversed.tb<3>().device(*dev.edevice) = dEdf.tb<3>().reverse(reverse_dim);
+  // Then accumulate and reverse
+  dEdxi.tb<3>().device(*dev.edevice) += dEdf_reversed.tb<3>().cumsum(d, exclusive).reverse(reverse_dim);
+}
+DYNET_NODE_INST_DEV_IMPL(CumulativeSum)
+
+// ************* CumulativeProduct *************
+
+#ifndef __CUDACC__
+
+string CumulativeProduct::as_string(const vector<string>& arg_names) const {
+  ostringstream s;
+  s << "cumprod(expression=" << arg_names[0] << ',' << d << ',' << exclusive << ')';
+  return s.str();
+}
+
+Dim CumulativeProduct::dim_forward(const vector<Dim>& xs) const {
+  DYNET_ASSERT(xs.size() == 1, "Failed input count check in CumulativeProduct");
+  DYNET_ARG_CHECK(xs[0].nd <= 3, "CumulativeProduct implemented up to tensors of order 3 for now")
+  DYNET_ARG_CHECK(d <= xs[0].nd, "dimension " << d << " is out of bounds of tensor of order " << xs[0].nd << " in CumulativeProduct" )
+  Dim ret(xs[0]);
+  return ret;
+}
+
+size_t CumulativeProduct::aux_storage_size() const {
+  return dim.size() * sizeof(float);
+}
+
+#endif
+
+template<class MyDevice>
+void CumulativeProduct::forward_dev_impl(const MyDevice & dev, const vector<const Tensor*>& xs, Tensor& fx) const {
+  DYNET_ASSERT(xs.size() == 1, "Failed input count check in CumulativeProduct");
+  fx.tb<3>().device(*dev.edevice) = xs[0]->tb<3>().cumprod(d, exclusive);
+}
+
+template<class MyDevice>
+void CumulativeProduct::backward_dev_impl(const MyDevice & dev,
+                             const vector<const Tensor*>& xs,
+                             const Tensor& fx,
+                             const Tensor& dEdf,
+                             unsigned i,
+                             Tensor& dEdxi) const {
+  // follow https://github.com/tensorflow/tensorflow/blob/efd9bb40c02a4f524501a74f1f99ba44f1d9fe55/tensorflow/python/ops/math_grad.py#L1605
+  // or https://github.com/pytorch/pytorch/blob/3403cb857bc2e1bdfb26665688f077ee1b05e811/tools/autograd/templates/Functions.cpp#L280
+  // note that while this is O(n), it will fail if there are zeros in the input; see the second pytorch link for an O(n^2) function that's
+  // robust to zeros
+  DYNET_ARG_CHECK(i == 0, "Failed dimension check in CumulativeProduct::backward");
+  DYNET_ASSERT(xs.size() == 1, "Failed input count check in CumulativeProduct");
+
+  Eigen::array<bool, 4> reverse_dim = {false, false, false, false};
+  reverse_dim[d] = true;
+  // First multiply the product and the gradient
+  Tensor prod_times_grad(dim, (float*)aux_mem, fx.device, DeviceMempool::FXS);
+  prod_times_grad.tb<3>().device(*dev.edevice) = fx.tb<3>() * dEdf.tb<3>();
+  // Then reverse, accumulate, reverse, and rescale
+  dEdxi.tb<3>().device(*dev.edevice) += prod_times_grad.tb<3>().reverse(reverse_dim).cumsum(d, exclusive).reverse(reverse_dim) / xs[0]->tb<3>();
+}
+DYNET_NODE_INST_DEV_IMPL(CumulativeProduct)
+
 
 template<class MyDevice>
 void TraceOfProduct::forward_dev_impl(const MyDevice & dev, const vector<const Tensor*>& xs, Tensor& fx) const {

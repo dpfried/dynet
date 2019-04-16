@@ -132,6 +132,8 @@ Expression sum_cols(const Expression& x) { return Expression(x.pg, x.pg->add_fun
 Expression sum_elems(const Expression& x) { return Expression(x.pg, x.pg->add_function<SumElements>({x.i})); }
 
 Expression sum_batches(const Expression& x) { return Expression(x.pg, x.pg->add_function<SumBatches>({x.i})); }
+Expression cumsum(const Expression& x, unsigned d, bool exclusive) { return Expression(x.pg, x.pg->add_function<CumulativeSum>({x.i}, d, exclusive)); }
+Expression cumprod(const Expression& x, unsigned d, bool exclusive) { return Expression(x.pg, x.pg->add_function<CumulativeProduct>({x.i}, d, exclusive)); }
 
 Expression kmh_ngram(const Expression& x, unsigned n) { return Expression(x.pg, x.pg->add_function<KMHNGram>({x.i}, n)); }
 

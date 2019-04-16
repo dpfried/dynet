@@ -298,6 +298,8 @@ cdef extern from "dynet/expr.h" namespace "dynet::expr":
     CExpression c_kmax_pooling "dynet::expr::kmax_pooling" (CExpression& x, unsigned k) except + #
     CExpression c_fold_rows "dynet::expr::fold_rows" (CExpression& x, unsigned nrows) except + #
     CExpression c_sum_cols "dynet::expr::sum_cols" (CExpression& x) except +               #
+    CExpression c_cumsum "dynet::cumsum" (CExpression& x, unsigned d, bool exclusive) except +               #
+    CExpression c_cumprod "dynet::cumprod" (CExpression& x, unsigned d, bool exclusive) except +               #
     CExpression c_kmh_ngram "dynet::expr::kmh_ngram" (CExpression& x, unsigned n) except + #
 
     CExpression c_sum_batches "dynet::expr::sum_batches" (CExpression& x) except +

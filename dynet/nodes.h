@@ -397,6 +397,30 @@ struct SumBatches : public Node {
   virtual bool supports_multibatch() const override { return true; }
 };
 
+//y_i = \sum_{j<=i} x_j if not exclusive
+//y_i = \sum_{j<i} x_j if exclusive
+struct CumulativeSum : public Node {
+  template <typename T> explicit CumulativeSum(const T& a, unsigned d, bool exclusive) : Node(a), d(d), exclusive(exclusive){}
+  DYNET_NODE_DEFINE_DEV_IMPL()
+  size_t aux_storage_size() const override;
+  virtual bool supports_multibatch() const override { return true; }
+private:
+  unsigned d;
+  bool exclusive;
+};
+
+//y_i = \prod_{j<=i} x_j if not exclusive
+//y_i = \prod_{j<i} x_j if exclusive
+struct CumulativeProduct : public Node {
+  template <typename T> explicit CumulativeProduct(const T& a, unsigned d, bool exclusive) : Node(a), d(d), exclusive(exclusive){}
+  DYNET_NODE_DEFINE_DEV_IMPL()
+  size_t aux_storage_size() const override;
+  virtual bool supports_multibatch() const override { return true; }
+private:
+  unsigned d;
+  bool exclusive;
+};
+
 // y = ( \sum_i x_i ) / |x|
 struct Average : public Node {
   template <typename T> explicit Average(const T& a) : Node(a) {}

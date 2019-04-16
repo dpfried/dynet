@@ -1491,6 +1491,9 @@ cpdef Expression sum_elems(Expression x): return Expression.from_cexpr(x.cg_vers
 
 cpdef Expression sum_batches(Expression x): return Expression.from_cexpr(x.cg_version, c_sum_batches(x.c()))
 
+cpdef Expression cumsum(Expression x, unsigned d=0, bool exclusive=False): return Expression.from_cexpr(x.cg_version, c_cumsum(x.c(), d, exclusive))
+cpdef Expression cumprod(Expression x, unsigned d=0, bool exclusive=False): return Expression.from_cexpr(x.cg_version, c_cumprod(x.c(), d, exclusive))
+
 #expr-opt
 cpdef Expression fold_rows(Expression x, unsigned nrows=2): return Expression.from_cexpr(x.cg_version, c_fold_rows(x.c(),nrows))
 #expr-expr-opt

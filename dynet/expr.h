@@ -1521,6 +1521,8 @@ Expression fold_rows(const Expression& x, unsigned nrows = 2);
 Expression sum_dim(const Expression& x, unsigned d);
 Expression sum_cols(const Expression& x);
 Expression sum_rows(const Expression& x);
+Expression cumsum(const Expression& x, unsigned d, bool exclusive);
+Expression cumprod(const Expression& x, unsigned d, bool exclusive);
 Expression average_cols(const Expression& x);
 Expression kmh_ngram(const Expression& x, unsigned n);
 
