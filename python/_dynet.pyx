@@ -1517,6 +1517,38 @@ cpdef Expression block_dropout(Expression x, float p): return Expression.from_ce
 #expr-dim
 cpdef Expression reshape(Expression x, tuple d, unsigned int batch_size=1): return Expression.from_cexpr(x.cg_version, c_reshape(x.c(),Dim(d, batch_size)))
 
+cpdef Expression max_dim(Expression x, unsigned d=0):
+    """Max out through a dimension
+    
+    Select out a element/row/column/sub-tensor from an expression, with maximum value along a given dimension. This will result in the dimension of the expression being reduced by 1.
+    
+    Args:
+        x (dynet.Expression): Input expression
+    
+    Keyword Arguments:
+        d (int): Dimension on which to perform the maxout (default: (0))
+    
+    Returns:
+        dynet.Expression: An expression of sub-tensor with max value along dimension :code:`d`
+    """
+    return Expression.from_cexpr(x.cg_version, c_max_dim(x.c(), d))
+
+cpdef Expression min_dim(Expression x, unsigned d=0):
+    """Min out through a dimension
+    
+    Select out a element/row/column/sub-tensor from an expression, with minimum value along a given dimension. This will result in the dimension of the expression being reduced by 1.
+    
+    Args:
+        x (dynet.Expression): Input expression
+    
+    Keyword Arguments:
+        d (int): Dimension on which to perform the minout (default: (0))
+    
+    Returns:
+        dynet.Expression: An expression of sub-tensor with min value along dimension :code:`d`
+    """
+    return Expression.from_cexpr(x.cg_version, c_min_dim(x.c(), d))
+
 cpdef Expression esum(list xs):
     assert xs, 'List is empty, nothing to esum.'
     cdef vector[CExpression] cvec
